@@ -57,7 +57,12 @@ const Note = ({ id, ContainerRef, initialPosition, isSelected, onSelect , onMove
   }, [isDragging, offset, ContainerRef])
 
   useEffect(() => {
-    setPosition(initialPosition);
+    if (
+      initialPosition &&
+      (initialPosition.x !== position.x || initialPosition.y !== position.y)
+    ) {
+      setPosition(initialPosition);
+    }
   }, [initialPosition]);
 
   return (

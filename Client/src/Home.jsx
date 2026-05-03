@@ -1,20 +1,71 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Note from './components/Note.jsx'
 import io from "socket.io-client";
 const socket = io("http://localhost:3000");
 const Home = () => {
   const ContainerRef = useRef();
-  const { roomId } = useParams();  
+  const navigate = useNavigate();
+  const { roomId } = useParams();
+  const [validUser,setValidUser] = useState(false);  
+  const [checked, setChecked] = useState(false);
   const canvasRef = useRef();
   const [context , setContext] = useState(null);
   const [notes, setNotes] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [userCnt,setUserCnt] = useState(0);
+  const [user,setUser] = useState({});
   const [users,setUsers] = useState([]);
   const [drawMode, setDrawMode] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [eraseMode, setEraseMode] = useState(false);
+  const getUserInfo = async() => {
+    const email = localStorage.getItem("user-email");
+    try{
+      const res = await fetch("http://localhost:3000/getUser-info",{
+        method:"POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body : JSON.stringify({email:email})
+      })
+      if(!res.ok){
+        console.log("Failed to fecth user data");
+        return;
+      }
+      const data = await res.json();
+      const username = data.username;
+      const userId = data.userId;
+      const newUser = {
+        id : userId,
+        name : username,
+        email : email
+      }
+      console.log(username);
+      console.log(newUser.id);
+      setUser(newUser);
+    }catch(err){ 
+      console.log(err);
+    }
+  } 
+  const checkValid = async()=>{
+    try{
+      const res = await fetch("http://localhost:3000/authenticated-user",{
+        method : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({userId: user.id, roomId: roomId}),
+      })
+      if(res.ok){
+        setValidUser(true);
+      }else{
+        navigate('/join-room')
+      }
+    }catch(err){
+      console.log(err);
+    }
+  }
   const getMousePosition = (e) =>{
     const rect = ContainerRef.current.getBoundingClientRect();
     return {
@@ -159,16 +210,21 @@ const Home = () => {
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
-  useEffect(()=>{
-    const canvas = canvasRef.current;
-    const rect = ContainerRef.current.getBoundingClientRect();
-    if(canvas){
-      const ctx = canvas?.getContext("2d");
-      setContext(ctx);
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-    }
-  },[]);
+useEffect(() => {
+    const resizeCanvas = () => {
+      const canvas = canvasRef.current;
+      const rect = ContainerRef.current.getBoundingClientRect();
+      if (canvas) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
+    };
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    return () => window.removeEventListener("resize", resizeCanvas);
+  }, []);
   useEffect(() => {
     if (!context) return;
 
@@ -214,15 +270,33 @@ const Home = () => {
     };
   }, [context]);
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      setContext(ctx);
+    }
+  }, []);
+  useEffect(() => {
   if (roomId) {
     socket.emit("room", roomId);
   }
 }, [roomId]);
+  useEffect(() => {
+    getUserInfo();
+  }, []);
+
+useEffect(() => {
+  if (user.id && roomId && !checked) {
+    checkValid();
+    setChecked(true);
+  }
+}, [user, roomId, checked]);
   return (
     <div className='flex flex-col h-screen'>
       <div className='h-14 px-2 items-center flex gap-10 bg-red-100'>
         <p className='font-semibold'>Room : {roomId}</p>
         <p>User : {userCnt}</p>
+        <p>{user.name}</p>
       </div>
 
       <div className='flex flex-1'>
@@ -276,7 +350,14 @@ const Home = () => {
               initialPosition={{ x: note.x, y: note.y }}
               isSelected={selectedId === note.id}
               onSelect={() => setSelectedId(note.id)}
-              onMove={(x, y) => socket.emit("move-note", {roomId, id: note.id, x, y })}
+              onMove={(x, y) => {
+                setNotes(prev =>
+                  prev.map(n =>
+                    n.id === note.id ? { ...n, x, y } : n
+                  )
+                );
+                socket.emit("move-note", { roomId, id: note.id, x, y });
+              }}
             />
           ))}
         </div>

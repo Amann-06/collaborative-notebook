@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 
@@ -6,7 +6,36 @@ const socket = io("http://localhost:3000");
 
 const CreateRoom = () => {
   const [password, setPassword] = useState("");
+  // const [checked, setChecked] = useState(false);
   const navigate = useNavigate();
+  const [user,setUser] = useState({});
+  const getUserInfo = async() => {
+    const email = localStorage.getItem("user-email");
+    try{
+      const res = await fetch("http://localhost:3000/getUser-info",{
+        method:"POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body : JSON.stringify({email:email})
+      })
+      if(!res.ok){
+        console.log("Failed to fecth user data");
+        return;
+      }
+      const data = await res.json();
+      const username = data.username;
+      const userId = data.userId;
+      const newUser = {
+        id : userId,
+        name : username,
+        email : email
+      }
+      setUser(newUser);
+    }catch(err){ 
+      console.log(err);
+    }
+  } 
   const createRoom = async () => {
     try {
       const res = await fetch("http://localhost:3000/create-room", {
@@ -14,7 +43,7 @@ const CreateRoom = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({password : password , userId : user.id}),
       });
       const data = await res.json();
       socket.emit("room", data.id);
@@ -23,6 +52,11 @@ const CreateRoom = () => {
       console.error(err);
     }
   };
+
+
+  useEffect(() => {
+    getUserInfo();
+  }, []);
 
   return (
     <div>
