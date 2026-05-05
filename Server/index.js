@@ -30,10 +30,16 @@ io.on('connection',(socket)=>{
         io.emit("userCount",count);
     })
 
-    socket.on('room',(room)=>{
-        socket.join(room);
-        socket.room = room;
-    })
+    socket.on('room', async ({ roomId, userId }) => {
+        const room = rooms[roomId];
+        if (!room) return;
+
+        if (!room.users.includes(userId)) {
+            return;
+        }
+
+        socket.join(roomId);
+    });
 
     socket.on('add-note',({roomId,note})=>{
         console.log("Note received : ", note);

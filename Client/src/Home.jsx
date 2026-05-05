@@ -59,6 +59,10 @@ const Home = () => {
       })
       if(res.ok){
         setValidUser(true);
+        socket.emit("room", {
+          roomId,
+          userId: user.id
+        });
       }else{
         navigate('/join-room')
       }
@@ -211,6 +215,7 @@ const Home = () => {
     };
   }, []);
 useEffect(() => {
+    if (!validUser) return;
     const resizeCanvas = () => {
       const canvas = canvasRef.current;
       const rect = ContainerRef.current.getBoundingClientRect();
@@ -219,12 +224,10 @@ useEffect(() => {
         canvas.height = rect.height;
       }
     };
-
     resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
+    window.addEventListener("resize", resizeCanvas)
     return () => window.removeEventListener("resize", resizeCanvas);
-  }, []);
+  }, [validUser]);
   useEffect(() => {
     if (!context) return;
 
@@ -275,12 +278,12 @@ useEffect(() => {
       const ctx = canvas.getContext("2d");
       setContext(ctx);
     }
-  }, []);
-  useEffect(() => {
-  if (roomId) {
-    socket.emit("room", roomId);
-  }
-}, [roomId]);
+  }, [validUser]);
+//   useEffect(() => {
+//   if (roomId) {
+//     socket.emit("room", roomId);
+//   }
+// }, [roomId]);
   useEffect(() => {
     getUserInfo();
   }, []);
@@ -290,12 +293,18 @@ useEffect(() => {
     checkValid();
     setChecked(true);
   }
-}, [user, roomId, checked]);
+}, [user.id, roomId, checked]);
+  if (!validUser) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p>Checking access...</p>
+      </div>
+    );
+  }
   return (
     <div className='flex flex-col h-screen'>
       <div className='h-14 px-2 items-center flex gap-10 bg-red-100'>
         <p className='font-semibold'>Room : {roomId}</p>
-        <p>User : {userCnt}</p>
         <p>{user.name}</p>
       </div>
 
