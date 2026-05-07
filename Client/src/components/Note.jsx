@@ -68,13 +68,13 @@ const Note = ({ id, ContainerRef, initialPosition, isSelected, onSelect , onMove
   return (
     <div
       onMouseDown={handleMouseDown}
-      className={`absolute cursor-grab shadow-lg shadow-black/60 active:cursor-grabbing border border-black overflow-hidden
+      className={`absolute cursor-grab active:cursor-grabbing border rounded-md overflow-hidden
       }`}
       style={{
         top: position.y,
         left: position.x,
-        width: '200px',
-        height: '200px',
+        width: '150px',
+        height: '150px',
         zIndex: isSelected ? 10 : 1,
         backgroundColor:'Yellow',
         // backgroundImage: 'url("https://png.pngtree.com/png-vector/20250323/ourmid/pngtree-yellow-sticky-note-isolated-on-white-png-image_15844065.png")',
@@ -84,7 +84,7 @@ const Note = ({ id, ContainerRef, initialPosition, isSelected, onSelect , onMove
     >
       {isEditing ? (
         <textarea
-          className='absolute outline-none p-3 border-none text-black text-lg bg-transparent resize-none overflow-hidden break-words'
+          className='absolute outline-none p-3 border-none text-black bg-transparent resize-none overflow-hidden break-words'
           value={text}
           autoFocus
           onMouseDown={(e) => e.stopPropagation()}
@@ -93,7 +93,7 @@ const Note = ({ id, ContainerRef, initialPosition, isSelected, onSelect , onMove
         />
       ) : (
         <p
-          className='absolute p-3 text-black text-lg overflow-hidden break-words'
+          className='absolute p-3 text-black w-full h-full overflow-hidden break-words'
           onClick={(e) => {
             e.stopPropagation()
             onSelect && onSelect()

@@ -3,12 +3,14 @@ const app = express();
 const cors = require('cors');
 const server = require('http').Server(app);
 const mongoose = require('mongoose');
+
 const io = require('socket.io')(server, {
     cors: {
         origin: "http://localhost:5173",
         methods: ["GET", "POST"],
     }
 });
+
 const PORT = 3000;
 app.use(express.json());
 app.use(cors({
@@ -54,11 +56,9 @@ io.on('connection',(socket)=>{
     socket.on("draw-start", (data) => {
         socket.to(data.roomId).emit("draw-start", data);
     });
-
     socket.on("draw-move", (data) => {
         socket.to(data.roomId).emit("draw-move", data);
     });
-
     socket.on("draw-end", (roomId) => {
         socket.to(roomId).emit("draw-end");
     });

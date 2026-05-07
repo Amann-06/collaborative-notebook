@@ -59,21 +59,24 @@ const CreateRoom = () => {
   }, []);
 
   return (
-    <div>
-      <input
-        type="text"
-        placeholder="Enter password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="border p-1 outline-none"
-      />
+    <div className="flex justify-center items-center h-screen w-screen">
+      <div className='flex p-10 rounded-lg flex-col gap-5 justify-center items-center border shadow-md'>
+        <h1 className='font-semibold text-lg mb-5'>Create Room</h1>
+        <input
+          type="text"
+          placeholder="Enter password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="border-b p-1 outline-none"
+        />
 
-      <button
-        onClick={createRoom}
-        className="border px-5 py-2 bg-gray-100"
-      >
-        Create Room
-      </button>
+        <button
+          onClick={createRoom}
+          className="border shadow-sm rounded-md bg-green-500 text-white font-semibold py-2 px-6"
+        >
+          Create Room
+        </button>
+      </div>
     </div>
   );
 };
